@@ -82,21 +82,7 @@ Salvar: `Ctrl+O`, Enter, `Ctrl+X`
 
 ---
 
-### 5️⃣ Criar tabelas no banco de dados
-
-```bash
-# Criar tabela boletos_energia
-PGPASSWORD=AupusStaging2024 psql -U aupus_staging -d aupus_staging -h 127.0.0.1 < migrations/001_create_boletos_energia.sql
-
-# Adicionar campos de desconto
-PGPASSWORD=AupusStaging2024 psql -U aupus_staging -d aupus_staging -h 127.0.0.1 < migrations/002_add_discount_fields.sql
-```
-
-**Nota:** Se as tabelas já existirem, você verá um erro, mas pode ignorar.
-
----
-
-### 6️⃣ Instalar dependências e fazer build
+### 5️⃣ Instalar dependências e fazer build
 
 ```bash
 # Instalar dependências
@@ -111,7 +97,7 @@ mkdir -p logs
 
 ---
 
-### 7️⃣ Configurar Nginx
+### 6️⃣ Configurar Nginx
 
 ```bash
 # Editar configuração (substituir 'seudominio.com' pelo domínio real)
@@ -142,7 +128,7 @@ systemctl enable nginx
 
 ---
 
-### 8️⃣ Iniciar aplicação com PM2
+### 7️⃣ Iniciar aplicação com PM2
 
 ```bash
 # Dar permissão ao script
@@ -167,7 +153,7 @@ pm2 logs api-bb-backend
 
 ---
 
-### 9️⃣ Configurar Firewall
+### 8️⃣ Configurar Firewall
 
 ```bash
 # Permitir SSH, HTTP e HTTPS
@@ -182,7 +168,7 @@ ufw status
 
 ---
 
-### 🔟 Configurar SSL (HTTPS) - IMPORTANTE!
+### 9️⃣ Configurar SSL (HTTPS) - IMPORTANTE!
 
 ```bash
 # Instalar Certbot

@@ -149,21 +149,7 @@ Salvar com `Ctrl+O`, Enter, `Ctrl+X`.
 
 ---
 
-## 🏗️ Passo 7: Criar Tabelas do Banco de Dados
-
-```bash
-# Criar tabela boletos_energia (se não existir)
-psql -U aupus_staging -d aupus_staging -h 127.0.0.1 < migrations/001_create_boletos_energia.sql
-
-# Adicionar campos de desconto (se não existirem)
-psql -U aupus_staging -d aupus_staging -h 127.0.0.1 < migrations/002_add_discount_fields.sql
-```
-
-**Nota:** Se as tabelas já existirem, você pode pular este passo ou verificar se está tudo ok.
-
----
-
-## 📦 Passo 8: Instalar Dependências e Build
+## 📦 Passo 7: Instalar Dependências e Build
 
 ```bash
 # Instalar dependências
@@ -178,7 +164,7 @@ mkdir -p logs
 
 ---
 
-## 🌐 Passo 9: Configurar Nginx
+## 🌐 Passo 8: Configurar Nginx
 
 **Importante:** Substitua `seudominio.com` pelo seu domínio real!
 
@@ -209,7 +195,7 @@ systemctl enable nginx
 
 ---
 
-## 🔥 Passo 10: Iniciar Aplicação com PM2
+## 🔥 Passo 9: Iniciar Aplicação com PM2
 
 ```bash
 # Dar permissão ao script de deploy
@@ -231,7 +217,7 @@ pm2 logs api-bb-backend
 
 ---
 
-## 🔒 Passo 11: Configurar SSL (HTTPS) - IMPORTANTE!
+## 🔒 Passo 10: Configurar SSL (HTTPS) - IMPORTANTE!
 
 ```bash
 # Obter certificado SSL (substitua pelos seus domínios)
@@ -248,7 +234,7 @@ O Certbot irá:
 
 ---
 
-## 🔥 Passo 12: Configurar Firewall
+## 🔥 Passo 11: Configurar Firewall
 
 ```bash
 # Permitir SSH, HTTP e HTTPS
@@ -263,7 +249,7 @@ ufw status
 
 ---
 
-## ✅ Passo 13: Testar a Aplicação
+## ✅ Passo 12: Testar a Aplicação
 
 ### Testar Backend:
 ```bash
@@ -325,7 +311,7 @@ cd /var/www/api-bb
 
 ---
 
-## 🖥️ Passo 14: Atualizar Sistema de Leituras Local
+## 🖥️ Passo 13: Atualizar Sistema de Leituras Local
 
 No seu PC, no sistema Python de leituras, atualizar a URL da API:
 
