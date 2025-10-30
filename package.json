@@ -1,0 +1,56 @@
+{
+  "name": "banco-brasil-boletos-react",
+  "version": "3.0.0",
+  "description": "Sistema de geração de boletos Banco do Brasil com React",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/server.js",
+    "client": "set PORT=3002 && react-scripts start",
+    "build": "react-scripts build",
+    "clean": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json && if exist build rmdir /s /q build",
+    "fresh-start": "npm run clean && npm install && npm start"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.0",
+    "axios": "^1.6.0",
+    "bootstrap": "^5.3.0",
+    "bwip-js": "^4.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "jsbarcode": "^3.12.1",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.548.0",
+    "pg": "^8.16.3",
+    "puppeteer": "^24.26.0",
+    "qrcode": "^1.5.4",
+    "qrcode.react": "^3.1.0",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.9.0",
+    "react-dom": "^18.2.0",
+    "react-imask": "^7.6.1",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "proxy": "http://localhost:3001",
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
