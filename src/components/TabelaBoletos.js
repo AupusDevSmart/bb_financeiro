@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, Button, Badge, Collapse, Card, Row, Col, ButtonGroup } from 'react-bootstrap';
 import { formatarPrimeiraMaiuscula, formatarValor, formatarData, formatarCPFComMascara, formatarCNPJComMascara } from '../utils/formatters';
 
-function TabelaBoletos({ boletos, onBaixar, onConsultar, onBaixarPDF }) {
+function TabelaBoletos({ boletos, onBaixar, onConsultar, onBaixarPDF, onEditarVencimento }) {
   const [expandedRows, setExpandedRows] = useState({});
 
   const toggleRow = (index) => {
@@ -144,13 +144,22 @@ function TabelaBoletos({ boletos, onBaixar, onConsultar, onBaixarPDF }) {
                       <i className="fas fa-file-pdf"></i>
                     </Button>
                     {boleto.codigoEstadoTituloCobranca === 1 && (
-                      <Button
-                        variant="outline-danger"
-                        title="Cancelar Boleto"
-                        onClick={() => onBaixar && onBaixar(boleto)}
-                      >
-                        <i className="fas fa-times"></i>
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline-warning"
+                          title="Alterar Vencimento"
+                          onClick={() => onEditarVencimento && onEditarVencimento(boleto)}
+                        >
+                          <i className="fas fa-calendar-alt"></i>
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          title="Cancelar Boleto"
+                          onClick={() => onBaixar && onBaixar(boleto)}
+                        >
+                          <i className="fas fa-times"></i>
+                        </Button>
+                      </>
                     )}
                   </ButtonGroup>
                 </td>

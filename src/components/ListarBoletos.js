@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Form, Button, Row, Col, Alert, Spinner, Card, Badge } from 'react-bootstrap';
-import { listarBoletos, consultarBoleto, consultarPixBoleto, baixarBoleto } from '../services/api';
+import { Form, Button, Row, Col, Alert, Spinner, Card, Badge, Modal } from 'react-bootstrap';
+import { listarBoletos, consultarBoleto, consultarPixBoleto, baixarBoleto, obterToken } from '../services/api';
 import TabelaBoletos from './TabelaBoletos';
 import { CONFIG } from '../config';
 
@@ -8,6 +8,12 @@ function ListarBoletos({ onBoletoSelect }) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
   const [boletoDetalhado, setBoletoDetalhado] = useState([]);
+
+  // Estados do modal de edição de vencimento
+  const [showModalVencimento, setShowModalVencimento] = useState(false);
+  const [boletoEditando, setBoletoEditando] = useState(null);
+  const [novaDataVencimento, setNovaDataVencimento] = useState('');
+  const [loadingEdicao, setLoadingEdicao] = useState(false);
 
   // Estados de paginação
   const [todosOsBoletos, setTodosOsBoletos] = useState([]); // Lista completa (apenas cabeçalhos)
@@ -39,7 +45,8 @@ function ListarBoletos({ onBoletoSelect }) {
     indicadorSituacao: 'A',
     tipoData: 'registro',
     dataInicio: datasPadrao.dataInicio,
-    dataFim: datasPadrao.dataFim
+    dataFim: datasPadrao.dataFim,
+    nome: ''
   });
 
   const handleInputChange = (e) => {
@@ -357,6 +364,80 @@ function ListarBoletos({ onBoletoSelect }) {
     }
   };
 
+  // Função para abrir modal de edição de vencimento
+  const handleEditarVencimento = (boleto) => {
+    setBoletoEditando(boleto);
+    // Converter data para formato yyyy-mm-dd para o input date
+    const dataAtual = boleto.dataVencimento || boleto.dataVencimentoTituloCobranca;
+    if (dataAtual) {
+      // Formato pode ser dd.mm.yyyy ou dd/mm/yyyy
+      const partes = dataAtual.includes('.') ? dataAtual.split('.') : dataAtual.split('/');
+      if (partes.length === 3) {
+        setNovaDataVencimento(`${partes[2]}-${partes[1]}-${partes[0]}`);
+      }
+    }
+    setShowModalVencimento(true);
+  };
+
+  // Função para salvar nova data de vencimento
+  const handleSalvarVencimento = async () => {
+    if (!boletoEditando || !novaDataVencimento) {
+      alert('Selecione uma nova data de vencimento');
+      return;
+    }
+
+    try {
+      setLoadingEdicao(true);
+
+      // Obter token OAuth
+      console.log('🔑 Obtendo token OAuth...');
+      const tokenResponse = await obterToken();
+
+      if (!tokenResponse || !tokenResponse.access_token) {
+        throw new Error('Não foi possível obter token OAuth');
+      }
+
+      const numeroBoleto = boletoEditando.numeroBoletoBB || boletoEditando.numeroTituloCliente;
+
+      console.log(`📅 Alterando vencimento do boleto ${numeroBoleto} para ${novaDataVencimento}`);
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/boleto-energia/alterar-vencimento/${numeroBoleto}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          novaDataVencimento: novaDataVencimento,
+          token: tokenResponse.access_token
+        })
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resultado.error || 'Erro ao alterar vencimento');
+      }
+
+      alert(`✅ Data de vencimento alterada com sucesso!\n\nDe: ${resultado.boleto?.data_vencimento_anterior}\nPara: ${resultado.boleto?.data_vencimento_nova}`);
+
+      // Fechar modal e atualizar lista
+      setShowModalVencimento(false);
+      setBoletoEditando(null);
+      setNovaDataVencimento('');
+
+      // Limpar cache e recarregar
+      setBoletosCarregados({});
+      handleBuscar();
+
+    } catch (error) {
+      console.error('❌ Erro ao alterar vencimento:', error);
+      alert('Erro ao alterar vencimento: ' + error.message);
+    } finally {
+      setLoadingEdicao(false);
+    }
+  };
+
   const handleBaixarPDF = async (boleto) => {
     try {
       setLoading(true);
@@ -378,7 +459,8 @@ function ListarBoletos({ onBoletoSelect }) {
         dadosPix: dadosPix
       };
 
-      const response = await fetch('http://localhost:3001/gerar-pdf-boleto', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/gerar-pdf-boleto`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -504,6 +586,23 @@ function ListarBoletos({ onBoletoSelect }) {
                 </Form.Group>
               </Col>
             </Row>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Filtrar por Nome do Cliente</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="nome"
+                    placeholder="Digite o nome do cliente..."
+                    value={filtros.nome}
+                    onChange={handleInputChange}
+                  />
+                  <Form.Text className="text-muted">
+                    Filtra os resultados pelo nome do pagador (após buscar)
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
           </Form>
         </Card.Body>
       </Card>
@@ -515,21 +614,30 @@ function ListarBoletos({ onBoletoSelect }) {
         </Alert>
       )}
 
-      {!loading && boletoDetalhado.length > 0 && (
+      {!loading && boletoDetalhado.length > 0 && (() => {
+        // Aplicar filtro de nome (client-side)
+        const boletosFiltrados = filtros.nome
+          ? boletoDetalhado.filter(boleto =>
+              (boleto.nomeSacadoCobranca || '').toLowerCase().includes(filtros.nome.toLowerCase())
+            )
+          : boletoDetalhado;
+
+        return (
         <>
           <Card>
             <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Resultados da Busca</h5>
               <Badge bg="light" text="dark">
-                Total: {todosOsBoletos.length} boleto(s) | Mostrando: {boletoDetalhado.length} da página {paginaAtual}
+                Total: {todosOsBoletos.length} boleto(s) | Mostrando: {boletosFiltrados.length}{filtros.nome ? ` (filtrado por nome)` : ''} da página {paginaAtual}
               </Badge>
             </Card.Header>
             <Card.Body className="p-0">
               <TabelaBoletos
-                boletos={boletoDetalhado}
+                boletos={boletosFiltrados}
                 onBaixar={handleBaixarBoleto}
                 onConsultar={handleConsultarBoleto}
                 onBaixarPDF={handleBaixarPDF}
+                onEditarVencimento={handleEditarVencimento}
               />
             </Card.Body>
           </Card>
@@ -591,7 +699,8 @@ function ListarBoletos({ onBoletoSelect }) {
             </Card>
           )}
         </>
-      )}
+        );
+      })()}
 
       {loading && (
         <div className="loading-spinner">
@@ -599,6 +708,59 @@ function ListarBoletos({ onBoletoSelect }) {
           <p className="mt-3 text-muted">Carregando boletos...</p>
         </div>
       )}
+
+      {/* Modal de Edição de Vencimento */}
+      <Modal show={showModalVencimento} onHide={() => setShowModalVencimento(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="fas fa-calendar-alt me-2"></i>
+            Alterar Data de Vencimento
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {boletoEditando && (
+            <>
+              <div className="mb-3 p-3 bg-light rounded">
+                <p className="mb-1"><strong>Boleto:</strong> {boletoEditando.sequencial}</p>
+                <p className="mb-1"><strong>Pagador:</strong> {boletoEditando.nomeSacadoCobranca}</p>
+                <p className="mb-1"><strong>Valor:</strong> R$ {(boletoEditando.valorAtual || boletoEditando.valorOriginal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <p className="mb-0"><strong>Vencimento Atual:</strong> {boletoEditando.dataVencimento || boletoEditando.dataVencimentoTituloCobranca}</p>
+              </div>
+
+              <Form.Group>
+                <Form.Label><strong>Nova Data de Vencimento:</strong></Form.Label>
+                <Form.Control
+                  type="date"
+                  value={novaDataVencimento}
+                  onChange={(e) => setNovaDataVencimento(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                <Form.Text className="text-muted">
+                  A nova data será atualizada diretamente na API do Banco do Brasil.
+                </Form.Text>
+              </Form.Group>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModalVencimento(false)} disabled={loadingEdicao}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleSalvarVencimento} disabled={loadingEdicao || !novaDataVencimento}>
+            {loadingEdicao ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save me-2"></i>
+                Salvar Alteração
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

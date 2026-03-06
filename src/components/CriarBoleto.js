@@ -43,7 +43,7 @@ function CriarBoleto({ onSuccess }) {
     cep: '',
     cidade: '',
     bairro: '',
-    uf: 'SP',
+    uf: 'GO',
     telefone: '',
     email: '',
 
@@ -132,7 +132,8 @@ function CriarBoleto({ onSuccess }) {
         dataVencimento: formatarDataParaAPI(formData.dataVencimento),
         valorOriginal: parseFloat(formData.valorOriginal),
         indicadorAceiteTituloVencido: 'S',
-        numeroDiasLimiteRecebimento: 30,
+        numeroDiasLimiteRecebimento: 300,
+        quantidadeDiasProtesto: 45,
         codigoAceite: 'N',
         codigoTipoTitulo: 2,
         descricaoTipoTitulo: 'DM',
@@ -202,7 +203,7 @@ function CriarBoleto({ onSuccess }) {
         cep: '',
         cidade: '',
         bairro: '',
-        uf: 'SP'
+        uf: 'GO'
       });
 
     } catch (error) {
@@ -481,11 +482,10 @@ function CriarBoleto({ onSuccess }) {
               </Col>
             </Row>
 
-            <div className="d-grid gap-2 mt-4">
+            <div className="mt-4 d-flex justify-content-end">
               <Button
                 variant="primary"
                 type="submit"
-                size="lg"
                 disabled={loading}
               >
                 {loading ? (

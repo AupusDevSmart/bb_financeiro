@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+@page {
+    size: A4;
+    margin: 0;
+}
+@page content {
+    margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+    @top-left {
+        content: "AUPUS Energia Solar";
+        font-family: 'DejaVu Sans', sans-serif;
+        font-size: 8.5pt;
+        font-weight: bold;
+        color: #455A64;
+        border-bottom: 2px solid #2E7D32;
+        padding-bottom: 6px;
+    }
+    @top-right {
+        content: "Documentação API-BB";
+        font-family: 'DejaVu Sans', sans-serif;
+        font-size: 8.5pt;
+        color: #78909C;
+        border-bottom: 2px solid #2E7D32;
+        padding-bottom: 6px;
+    }
+    @bottom-center {
+        content: counter(page);
+        font-family: 'DejaVu Sans', sans-serif;
+        font-size: 9pt;
+        color: #90A4AE;
+    }
+}
+
+/* ===== CAPA ===== */
+.cover {
+    page: cover;
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    font-family: 'DejaVu Sans', sans-serif;
+    page-break-after: always;
+}
+.cover-header {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 100%);
+    height: 280px;
+    padding: 80px 60px 40px 60px;
+    position: relative;
+}
+.cover-header::after {
+    content: '';
+    display: block;
+    height: 6px;
+    background: #1B5E20;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.cover-title {
+    font-size: 38pt;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+}
+.cover-subtitle {
+    font-size: 14pt;
+    color: rgba(255,255,255,0.85);
+    margin-top: 12px;
+}
+.cover-tagline {
+    font-size: 11pt;
+    color: rgba(255,255,255,0.6);
+    margin-top: 6px;
+}
+.cover-info {
+    margin: 80px 60px 0 60px;
+    border-left: 4px solid #2E7D32;
+    padding: 20px 24px;
+    background: #FAFAFA;
+    border-radius: 0 6px 6px 0;
+}
+.cover-info table {
+    border-collapse: collapse;
+    font-size: 11pt;
+}
+.cover-info td {
+    padding: 8px 0;
+    vertical-align: top;
+}
+.cover-info td:first-child {
+    font-weight: bold;
+    color: #616161;
+    padding-right: 24px;
+    white-space: nowrap;
+}
+.cover-info td:last-child {
+    color: #212121;
+}
+.cover-footer {
+    position: absolute;
+    bottom: 60px;
+    left: 60px;
+    right: 60px;
+}
+.cover-footer-line {
+    height: 1px;
+    background: #E0E0E0;
+    margin-bottom: 10px;
+}
+.cover-footer-text {
+    font-size: 9pt;
+    color: #9E9E9E;
+}
+.cover-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: #2E7D32;
+}
+
+/* ===== CONTEÚDO ===== */
+.content {
+    page: content;
+    font-family: 'DejaVu Sans', sans-serif;
+    font-size: 10pt;
+    color: #212121;
+    line-height: 1.55;
+}
+
+/* Títulos */
+.content h1 {
+    font-size: 22pt;
+    color: #1B5E20;
+    margin-top: 0;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #2E7D32;
+    page-break-after: avoid;
+}
+.content h2 {
+    font-size: 15pt;
+    color: #1565C0;
+    margin-top: 28px;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1.5px solid rgba(21,101,192,0.2);
+    page-break-after: avoid;
+}
+.content h3 {
+    font-size: 11.5pt;
+    color: #37474F;
+    margin-top: 22px;
+    margin-bottom: 4px;
+    padding: 7px 14px;
+    background: #ECEFF1;
+    border-left: 4px solid #2E7D32;
+    border-radius: 0 4px 4px 0;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+}
+/* Evitar quebra de card: h3 + ul + p ficam juntos */
+.content h3 + ul {
+    page-break-before: avoid;
+}
+.content h3 + ul + p {
+    page-break-before: avoid;
+}
+.content h3 + p {
+    page-break-before: avoid;
+}
+
+/* Parágrafos */
+.content p {
+    margin: 8px 0;
+}
+
+/* Primeiro parágrafo após lista = explicação do card */
+.content ul + p {
+    color: #455A64;
+    font-style: italic;
+    margin: 6px 0 16px 0;
+    padding-left: 4px;
+    border-left: 2px solid #C8E6C9;
+    padding: 4px 0 4px 10px;
+}
+
+/* Listas */
+.content ul {
+    margin: 6px 0;
+    padding-left: 18px;
+}
+.content li {
+    margin: 3px 0;
+    padding-left: 4px;
+}
+.content li::marker {
+    color: #43A047;
+}
+
+/* Código inline */
+.content code {
+    font-family: 'DejaVu Sans Mono', monospace;
+    font-size: 8.5pt;
+    background: #F5F5F5;
+    border: 1px solid #E0E0E0;
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #C62828;
+}
+
+/* Bold labels nas listas */
+.content strong {
+    color: #1B5E20;
+}
+
+/* Separador visual entre h2 sections */
+.content h2 + h3 {
+    margin-top: 14px;
+}
+
+/* Tabelas */
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+}
+.content thead th {
+    background: #2E7D32;
+    color: white;
+    font-weight: bold;
+    padding: 10px 10px;
+    text-align: left;
+    border: none;
+}
+.content thead th:first-child {
+    border-radius: 6px 0 0 0;
+}
+.content thead th:last-child {
+    border-radius: 0 6px 0 0;
+}
+.content tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #E8F5E9;
+    vertical-align: top;
+}
+.content tbody tr:nth-child(even) {
+    background: #F1F8E9;
+}
+.content tbody tr:nth-child(odd) {
+    background: white;
+}
+.content tbody tr:hover {
+    background: #DCEDC8;
+}
+.content tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 6px;
+}
+.content tbody tr:last-child td:last-child {
+    border-radius: 0 0 6px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+    <div class="cover-header">
+        <div class="cover-title">Dashboard de Faturas</div>
+        <div class="cover-subtitle">AUPUS Energia Solar</div>
+        <div class="cover-tagline">Sistema de Gestão de Faturas e Boletos</div>
+    </div>
+    <div class="cover-info">
+        <table>
+            <tr><td>Sistema</td><td>API-BB</td></tr>
+            <tr><td>Componente</td><td>DashboardFaturas.js</td></tr>
+            <tr><td>Tipo</td><td>Documentação Técnica</td></tr>
+            <tr><td>Data</td><td>26 de fevereiro de 2026</td></tr>
+        </table>
+    </div>
+    <div class="cover-footer">
+        <div class="cover-footer-line"></div>
+        <div class="cover-footer-text">Documento interno — Gerado automaticamente</div>
+    </div>
+    <div class="cover-accent"></div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+<h1>Dashboard de Faturas</h1>
+<p><strong>Componente</strong>: <code>src/components/DashboardFaturas.js</code>
+<strong>Endpoint principal</strong>: <code>GET /api/dashboard/resumo/:mes</code></p>
+<h2>O que é</h2>
+<p>Página inicial do sistema. Mostra um resumo mensal com cards de métricas sobre faturas, compensação, boletos e valores financeiros. O usuário seleciona o mês por um dropdown (com setas para navegar) e todos os dados atualizam.</p>
+<p>Os meses disponíveis vêm de <code>GET /api/meses-disponiveis-boletos</code>, que lista os meses distintos da tabela <code>boletos_energia</code> (DB <code>aupus_faturas</code>, localhost).</p>
+<h2>Dados exibidos e suas origens</h2>
+<h3>UCs Ativas</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_prod</code> (92.113.38.164)</li>
+<li><strong>Tabelas</strong>: <code>controle_clube</code> JOIN <code>unidades_consumidoras</code></li>
+<li><strong>Condições</strong>: <code>cc.deleted_at IS NULL</code>, <code>uc.deleted_at IS NULL</code>, <code>uc.gerador = false</code></li>
+</ul>
+<p>Número total de unidades consumidoras de associados ativas, excluindo as usinas geradoras.</p>
+<h3>Recebidas / Não Recebidas</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>faturas_baixadas</code></li>
+<li><strong>Coluna</strong>: <code>uc</code>, filtrado por <code>mes_referencia</code> e <code>is_duplicata = false</code></li>
+<li><strong>Lógica</strong>: Compara a lista de UCs ativas (CRM) com as UCs que têm registro em <code>faturas_baixadas</code>. A diferença = Não Recebidas.</li>
+</ul>
+<p>Recebidas: quantas UCs já tiveram a fatura do mês baixada pelo sistema. Não Recebidas: UCs que ainda não têm fatura naquele mês.</p>
+<h3>Pendentes</h3>
+<p>Faturas que não foram baixadas aindacompletamente.</p>
+<h3>Com Erro</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>faturas_baixadas</code></li>
+<li><strong>Coluna</strong>: <code>status</code></li>
+<li><strong>Condições</strong>: <code>status IN ('erro', 'erro_processamento')</code></li>
+</ul>
+<p>Faturas que falharam durante o processamento automático e precisam de atenção manual.</p>
+<h3>Compensado</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>faturas_baixadas</code></li>
+<li><strong>Coluna</strong>: <code>dados_leitura-&gt;&gt;'categoria'</code></li>
+<li><strong>Condições</strong>: categoria contém "Compensação" mas NÃO contém "Sem Compensação"</li>
+</ul>
+<p>Faturas em que a concessionária aplicou créditos de energia das usinas geradoras, reduzindo o valor a pagar.</p>
+<h3>Comp. Simulada</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>boletos_energia</code></li>
+<li><strong>Coluna</strong>: <code>compensacao_completa_aplicada</code></li>
+<li><strong>Condições</strong>: <code>compensacao_completa_aplicada = true</code></li>
+</ul>
+<p>Faturas que originalmente vieram sem compensação da concessionária, mas o sistema calculou e aplicou a compensação manualmente para gerar o boleto com desconto.</p>
+<h3>Sem Compensação</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabelas</strong>: <code>faturas_baixadas</code> e <code>boletos_energia</code></li>
+<li><strong>Lógica</strong>: (faturas com categoria "Sem Compensação" em <code>faturas_baixadas</code>) menos (as que receberam compensação simulada em <code>boletos_energia</code>)</li>
+</ul>
+<p>Faturas em que a concessionária não aplicou créditos de energia e o sistema também não simulou. Precisam de envio do PDF original para compensação manual.</p>
+<h3>Geradas</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>boletos_energia</code></li>
+<li><strong>Coluna</strong>: <code>status</code></li>
+<li><strong>Condições</strong>: <code>status IN ('Boleto gerado', 'Pago')</code></li>
+</ul>
+<p>Quantidade de boletos que foram registrados com sucesso no Banco do Brasil naquele mês.</p>
+<h3>Enviadas</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabelas</strong>: <code>boletos_energia</code> + <code>controle_envios</code></li>
+<li><strong>Lógica</strong>: boleto tem registro correspondente em <code>controle_envios</code> com <code>status = 'enviado'</code>, cruzando por UC e mês</li>
+</ul>
+<p>Boletos que já foram enviados ao cliente por WhatsApp ou email. No caso da plataforma, provavelmente não terão envios, pois os usuarios entrarão na plataforma para fazer o download.</p>
+<h3>Pagas</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>boletos_energia</code></li>
+<li><strong>Coluna</strong>: <code>status</code></li>
+<li><strong>Condições</strong>: <code>status = 'Pago'</code></li>
+</ul>
+<p>Boletos que o cliente já pagou. O status é atualizado automaticamente via consulta ao Banco do Brasil.</p>
+<h3>Total Boletos (R$)</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>boletos_energia</code></li>
+<li><strong>Coluna</strong>: <code>valor_boleto</code></li>
+<li><strong>Condições</strong>: <code>status IN ('Boleto gerado', 'Pago')</code></li>
+</ul>
+<p>Soma em reais de todos os boletos gerados no mês, incluindo os já pagos.</p>
+<h3>Valor Recebido (R$)</h3>
+<ul>
+<li><strong>DB</strong>: <code>aupus_faturas</code> (localhost)</li>
+<li><strong>Tabela</strong>: <code>boletos_energia</code></li>
+<li><strong>Coluna</strong>: <code>valor_boleto</code></li>
+<li><strong>Condições</strong>: <code>status = 'Pago'</code></li>
+</ul>
+<p>Soma em reais apenas dos boletos que já foram pagos no mês.</p>
+<h3>Taxa Conversão (%)</h3>
+<ul>
+<li><strong>Cálculo</strong>: <code>(pagas / geradas) * 100</code> (calculado no frontend)</li>
+</ul>
+<p>Percentual de boletos pagos em relação ao total de boletos gerados. Indica a eficiência de cobrança do mês.</p>
+<h2>Itens de Atenção</h2>
+<p>Seção condicional que aparece quando há situações que precisam de ação. Cada alerta mostra tipo (erro/aviso/info), mensagem e quantidade:</p>
+<ul>
+<li><strong>Não Recebidas &gt; 0</strong>: "UCs sem fatura no mês" (erro)</li>
+<li><strong>Com Erro &gt; 0</strong>: "Faturas com erro de processamento" (erro)</li>
+<li><strong>Pendentes &gt; 0</strong>: "Faturas pendentes (não lidas)" (aviso)</li>
+<li><strong>Sem Compensação &gt; 0</strong>: "Faturas sem compensação (enviar PDF original)" (info)</li>
+</ul>
+<h2>Resumo dos bancos</h2>
+<table>
+<thead>
+<tr>
+<th>Dado</th>
+<th>Banco</th>
+<th>Tabela</th>
+<th>Coluna chave</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UCs Ativas</td>
+<td>aupus_prod (remoto)</td>
+<td>controle_clube + unidades_consumidoras</td>
+<td>gerador = false</td>
+</tr>
+<tr>
+<td>Recebidas / Não Recebidas</td>
+<td>aupus_faturas (local)</td>
+<td>faturas_baixadas</td>
+<td>uc, mes_referencia</td>
+</tr>
+<tr>
+<td>Pendentes</td>
+<td>aupus_faturas (local)</td>
+<td>faturas_baixadas</td>
+<td>caminho_storage, dados_leitura-&gt;categoria</td>
+</tr>
+<tr>
+<td>Com Erro</td>
+<td>aupus_faturas (local)</td>
+<td>faturas_baixadas</td>
+<td>status</td>
+</tr>
+<tr>
+<td>Compensado</td>
+<td>aupus_faturas (local)</td>
+<td>faturas_baixadas</td>
+<td>dados_leitura-&gt;categoria</td>
+</tr>
+<tr>
+<td>Comp. Simulada</td>
+<td>aupus_faturas (local)</td>
+<td>boletos_energia</td>
+<td>compensacao_completa_aplicada</td>
+</tr>
+<tr>
+<td>Sem Compensação</td>
+<td>aupus_faturas (local)</td>
+<td>faturas_baixadas - boletos_energia</td>
+<td>categoria - compensacao_completa_aplicada</td>
+</tr>
+<tr>
+<td>Geradas / Pagas</td>
+<td>aupus_faturas (local)</td>
+<td>boletos_energia</td>
+<td>status</td>
+</tr>
+<tr>
+<td>Enviadas</td>
+<td>aupus_faturas (local)</td>
+<td>boletos_energia + controle_envios</td>
+<td>controle_envios.status = 'enviado'</td>
+</tr>
+<tr>
+<td>Valores (R$)</td>
+<td>aupus_faturas (local)</td>
+<td>boletos_energia</td>
+<td>valor_boleto</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+</body>
+</html>

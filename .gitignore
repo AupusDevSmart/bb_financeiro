@@ -8,7 +8,7 @@ build/
 # Environment variables
 .env
 .env.local
-# .env.production é mantido como template
+.env.production
 
 # Logs
 logs/
@@ -41,3 +41,15 @@ nul
 
 # Claude
 .claude/
+
+# Planilhas e relatórios temporários
+*.xlsx
+relatorios-cobranca/
+planilhas/
+
+# Scripts avulsos de investigação/migração
+investigacao_*.js
+gerar_relatorio_*.js
+enviar_retratacao.js
+obter_token_bb*.sh
+run-migration-*.js

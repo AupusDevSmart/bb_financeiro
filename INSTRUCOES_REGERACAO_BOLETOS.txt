@@ -1,0 +1,190 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔄 INSTRUÇÕES PARA REGENERAR OS 52 BOLETOS COM DADOS COMPLETOS
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA:
+  Os 52 boletos de Outubro/2025 foram baixados mas estão BRANCOS (vazios).
+
+SOLUÇÃO:
+  Script Python que regenera TODOS os boletos com dados completos.
+
+═══════════════════════════════════════════════════════════════════════════════
+PASSO 1: OBTER TOKEN BB OAUTH
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Abra o navegador e acesse:
+   https://bb.aupusenergia.com.br
+
+2. Faça login no sistema
+
+3. Abra o DevTools:
+   - Chrome/Edge: F12 ou Ctrl+Shift+I
+   - Firefox: F12 ou Ctrl+Shift+K
+
+4. Vá na aba "Console"
+
+5. Digite o comando:
+   localStorage.getItem('bb_token')
+
+6. Copie o token que aparece (SEM as aspas)
+   Exemplo: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZ...
+
+═══════════════════════════════════════════════════════════════════════════════
+PASSO 2: EXECUTAR O SCRIPT
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Conecte no servidor via SSH
+
+2. Exporte o token:
+   export BB_TOKEN="COLE_SEU_TOKEN_AQUI"
+
+3. Execute o script:
+   cd /var/www/api-bb
+   python3 regenerar_boletos_completos.py
+
+4. O script irá:
+   ✅ Buscar os 52 boletos no banco
+   ✅ Para cada um: buscar dados no BB + PIX
+   ✅ Gerar PDF completo com todos os dados
+   ✅ Salvar em: /var/www/aupus-sistema-faturas/dados/02. NET/2025/10.2025/
+
+═══════════════════════════════════════════════════════════════════════════════
+O QUE O SCRIPT FAZ
+═══════════════════════════════════════════════════════════════════════════════
+
+Para cada boleto:
+
+1. 📊 Busca dados no PostgreSQL (banco local)
+   - UC, nome, documento, endereço
+   - Consumo de energia
+   - Valores e descontos
+
+2. 📡 Busca dados completos na API do BB
+   - Linha digitável
+   - Código de barras
+   - Dados do pagador
+   - Juros, multa, descontos
+
+3. 📱 Busca dados PIX (se disponível)
+   - QR Code
+   - Copia e Cola
+
+4. 📄 Gera PDF completo
+   - Monta estrutura IGUAL ao frontend
+   - Inclui TODOS os dados
+   - Gera PDF profissional
+
+5. 💾 Salva arquivo
+   - Nome: "Boleto Aupus - {UC} - {Nome}.pdf"
+   - Local: /var/www/aupus-sistema-faturas/dados/02. NET/2025/10.2025/
+
+═══════════════════════════════════════════════════════════════════════════════
+DADOS INCLUÍDOS NO PDF
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Informações do Boleto:
+   - Linha digitável
+   - Código de barras
+   - Número do boleto
+   - Data de vencimento
+   - Valor do boleto
+
+✅ Informações do Pagador:
+   - Nome completo
+   - CPF/CNPJ
+   - Endereço completo
+   - CEP, cidade, UF
+
+✅ Informações de Energia:
+   - UC (Unidade Consumidora)
+   - Mês de referência
+   - Consumo total (kWh)
+   - Consumo compensado
+   - Consumo não compensado
+   - Valor energia compensada
+   - Valor bandeira compensada
+   - Tarifa mínima concessionária
+   - Valor com desconto AUPUS
+   - Economia gerada
+
+✅ PIX (se disponível):
+   - QR Code para pagamento
+   - Copia e Cola
+
+✅ Condições:
+   - Juros de mora (1%)
+   - Multa (2%)
+   - Descontos (se aplicável)
+
+═══════════════════════════════════════════════════════════════════════════════
+TEMPO ESTIMADO
+═══════════════════════════════════════════════════════════════════════════════
+
+  52 boletos × ~5 segundos cada = ~4-5 minutos total
+
+═══════════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 RESUMO DA REGENERAÇÃO
+================================================================================
+✅ Sucesso: 52/52
+❌ Erros: 0/52
+📁 Pasta: /var/www/aupus-sistema-faturas/dados/02. NET/2025/10.2025
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+ARQUIVOS CRIADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+Script principal:
+  /var/www/api-bb/regenerar_boletos_completos.py
+
+Documentação:
+  /var/www/api-bb/REGENERAR_BOLETOS_README.md
+  /var/www/api-bb/INSTRUCOES_REGERACAO_BOLETOS.txt (este arquivo)
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ Erro 401 Unauthorized:
+   - Token expirou (dura 1 hora)
+   - Obtenha um novo token seguindo PASSO 1
+
+❌ Erro de conexão ao banco:
+   - Verifique se PostgreSQL está rodando:
+     systemctl status postgresql
+
+❌ Erro ao criar arquivo:
+   - Verifique permissões da pasta:
+     ls -la /var/www/aupus-sistema-faturas/dados/02.\ NET/2025/
+
+❌ Script não encontrado:
+   - Verifique se está na pasta correta:
+     cd /var/www/api-bb
+     ls -la regenerar_boletos_completos.py
+
+═══════════════════════════════════════════════════════════════════════════════
+EXEMPLO DE USO COMPLETO
+═══════════════════════════════════════════════════════════════════════════════
+
+# 1. Obter token do navegador (console):
+localStorage.getItem('bb_token')
+# Copiar: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZ...
+
+# 2. No servidor SSH:
+cd /var/www/api-bb
+
+# 3. Exportar token:
+export BB_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZ..."
+
+# 4. Executar:
+python3 regenerar_boletos_completos.py
+
+# 5. Aguardar processamento (~4-5 minutos)
+
+# 6. Verificar arquivos:
+ls -la /var/www/aupus-sistema-faturas/dados/02.\ NET/2025/10.2025/
+
+═══════════════════════════════════════════════════════════════════════════════

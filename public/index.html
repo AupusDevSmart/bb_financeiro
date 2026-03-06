@@ -6,6 +6,16 @@
     <meta name="theme-color" content="#003087">
     <meta name="description" content="Sistema de geração de boletos Banco do Brasil">
     <title>🏦 Banco do Brasil - Gerador de Boletos</title>
+    <script>
+        // Limpar localStorage se versão for diferente (força reload limpo)
+        const APP_VERSION = '3.0.4';
+        const storedVersion = localStorage.getItem('app_version');
+        if (storedVersion !== APP_VERSION) {
+            console.log('Nova versão detectada. Limpando cache...');
+            localStorage.clear();
+            localStorage.setItem('app_version', APP_VERSION);
+        }
+    </script>
 </head>
 <body>
     <noscript>Você precisa habilitar JavaScript para executar este aplicativo.</noscript>

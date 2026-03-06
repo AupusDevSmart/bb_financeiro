@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001',
   timeout: 30000,
 });
 
@@ -26,7 +26,7 @@ export const removerAcentos = (texto) => {
   return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
-// Obter token OAuth
+// Obter token OAuth via PROXY (para evitar CORS do navegador)
 export const obterToken = async () => {
   try {
     // Verificar se ja temos um token valido em cache
@@ -35,16 +35,18 @@ export const obterToken = async () => {
       return tokenCache;
     }
 
-    console.log('[INFO] Obtendo novo token OAuth...');
+    console.log('[INFO] Obtendo novo token OAuth via proxy...');
     const auth = btoa(`${CONFIG.clientId}:${CONFIG.clientSecret}`);
 
-    const response = await api.post('/proxy-oauth/oauth/token',
+    // Fazer requisição via PROXY para evitar CORS
+    const response = await axios.post('/proxy-oauth/oauth/token',
       'grant_type=client_credentials&scope=cobrancas.boletos-info cobrancas.boletos-requisicao',
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Authorization': `Basic ${auth}`
-        }
+        },
+        skipAuthInterceptor: true // Não adicionar token automático nesta requisição
       }
     );
 
@@ -62,22 +64,81 @@ export const obterToken = async () => {
 
 // Interceptor para adicionar token e X-Application-Key em todas as requisicoes
 api.interceptors.request.use(async (config) => {
-  // Nao adicionar token para requisicoes OAuth
-  if (config.url.includes('/proxy-oauth/')) {
+  // Se skipAuthInterceptor estiver definido, não adiciona nenhum token automaticamente
+  if (config.skipAuthInterceptor) {
     return config;
   }
 
-  // Obter token e adicionar nos headers
-  try {
-    const token = await obterToken();
-    config.headers.Authorization = `Bearer ${token}`;
-    config.headers['X-Application-Key'] = CONFIG.developerKey;
-  } catch (error) {
-    console.error('Erro ao adicionar token na requisicao:', error);
+  // URLs que usam proxy do Banco do Brasil (token OAuth)
+  if (config.url.includes('/proxy-api/')) {
+    try {
+      const bbToken = await obterToken();
+      config.headers.Authorization = `Bearer ${bbToken}`;
+      config.headers['X-Application-Key'] = CONFIG.developerKey;
+    } catch (error) {
+      console.error('Erro ao adicionar token BB na requisicao:', error);
+    }
+    return config;
+  }
+
+  // URLs de autenticação OAuth (sem token)
+  if (config.url.includes('/proxy-oauth/') || config.url.includes('/api/login')) {
+    return config;
+  }
+
+  // Todas as outras URLs da nossa API usam JWT token
+  const authToken = localStorage.getItem('auth_token');
+  if (authToken) {
+    config.headers.Authorization = `Bearer ${authToken}`;
   }
 
   return config;
 });
+
+// Função para invalidar cache do token BB
+export const invalidarTokenCache = () => {
+  tokenCache = null;
+  tokenExpiry = null;
+  console.log('[INFO] Cache do token BB invalidado');
+};
+
+// Interceptor de resposta para tratar erros 401
+api.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+
+    // Se receber 401 da API do BB (proxy-api), invalidar cache e tentar novamente
+    if (error.response?.status === 401 &&
+        originalRequest?.url?.includes('/proxy-api/') &&
+        !originalRequest._retry) {
+      console.warn('[WARN] Token BB expirado. Renovando...');
+      originalRequest._retry = true;
+      invalidarTokenCache();
+
+      try {
+        const novoToken = await obterToken();
+        originalRequest.headers.Authorization = `Bearer ${novoToken}`;
+        return api(originalRequest);
+      } catch (retryError) {
+        console.error('[ERRO] Falha ao renovar token BB:', retryError);
+        return Promise.reject(retryError);
+      }
+    }
+
+    // Se receber 401 em qualquer rota da nossa API (não do BB), fazer logout
+    if (error.response?.status === 401 &&
+        error.config?.url &&
+        !error.config.url.includes('/proxy-') &&
+        !error.config.url.includes('/api/login')) {
+      console.warn('Token JWT inválido ou expirado. Fazendo logout...');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_email');
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Criar boleto
 export const criarBoleto = async (dados) => {
@@ -313,7 +374,9 @@ export const obterProximoSequencial = async () => {
     // FAIXA 2: 4000000001 em diante (após zona proibida)
 
     const FAIXA1_MIN = 1;                // 0000000001
-    const FAIXA1_MAX = 3648980999;       // 3648980999 (antes de 3648981xxx)
+    const FAIXA1_MAX = 999999;           // Limite da faixa 1 (sequenciais normais até 999999)
+    const ZONA_TESTES_MIN = 1000000;     // Números >= 1 milhão são considerados testes
+    const ZONA_TESTES_MAX = 3648980999;  // Até antes da zona proibida
     const ZONA_PROIBIDA_MIN = 3648981000; // Início da zona proibida
     const ZONA_PROIBIDA_MAX = 3648981999; // Fim da zona proibida
     const FAIXA2_MIN = 4000000001;       // Início da segunda faixa
@@ -321,6 +384,22 @@ export const obterProximoSequencial = async () => {
 
     let maiorSequencialFaixa1 = 0;
     let maiorSequencialFaixa2 = 0;
+    let countFaixa1Normal = 0;  // Contador de boletos na faixa normal
+
+    // NOVO: Primeiro consultar o banco local para obter o maior sequencial já usado
+    try {
+      console.log('🗄️ Consultando maior sequencial no banco LOCAL...');
+      const localResponse = await api.get('/api/maior-sequencial-local');
+      const maiorLocal = parseInt(localResponse.data?.maiorSequencial || 0);
+      console.log(`   📊 Maior sequencial no banco local: ${maiorLocal}`);
+
+      // Se encontrou no banco local, usar como base
+      if (maiorLocal > 0 && maiorLocal < FAIXA1_MAX) {
+        maiorSequencialFaixa1 = maiorLocal;
+      }
+    } catch (localError) {
+      console.warn('⚠️ Erro ao consultar banco local:', localError.message);
+    }
 
     // Buscar boletos dos últimos 60 dias (mais eficiente e pega os recentes)
     const dataFim = new Date();
@@ -397,8 +476,17 @@ export const obterProximoSequencial = async () => {
           return; // Pular este boleto
         }
 
-        // Verificar se está na FAIXA 1
+        // Ignorar se estiver na zona de testes (números altos usados em testes)
+        if (sequencial >= ZONA_TESTES_MIN && sequencial <= ZONA_TESTES_MAX) {
+          if (index < 5) {
+            console.log(`      ⚠️ Ignorando boleto de TESTE (número alto): ${sequencial}`);
+          }
+          return; // Pular este boleto - é um teste
+        }
+
+        // Verificar se está na FAIXA 1 (sequenciais normais)
         if (sequencial >= FAIXA1_MIN && sequencial <= FAIXA1_MAX) {
+          countFaixa1Normal++;
           if (sequencial > maiorSequencialFaixa1) {
             maiorSequencialFaixa1 = sequencial;
           }
